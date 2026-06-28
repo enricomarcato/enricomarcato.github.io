@@ -239,6 +239,11 @@
     function draw(visitor, land) {
       // rotate the globe to sit halfway between home and the visitor
       const target = visitor || HOME;
+      // zoom to the distance: close together -> zoom way in, far apart -> full globe
+const ang = d3.geoDistance(HOME, target);              // angular gap, radians
+let scale = 150 / Math.sin(Math.min(ang, Math.PI / 2)); // closer = bigger scale
+scale = Math.max(170, Math.min(1300, scale));           // clamp both ends
+projection.scale(visitor ? scale : 195);
       const mid = d3.geoInterpolate(HOME, target)(0.5);
       projection.rotate([-mid[0], -mid[1] * 0.7]);
 
@@ -300,9 +305,10 @@
         const d = await fetch("https://ipapi.co/json/").then(r => r.json());
         if (typeof d.latitude === "number" && typeof d.longitude === "number") {
           visitor = [d.longitude, d.latitude];
-          const km = distanceKm(HOME, visitor).toLocaleString("en-US");
-          document.getElementById("distWrap").innerHTML =
-            ', roughly <span class="dist">' + km + ' km</span> away from your current location';
+          const kmNum = distanceKm(HOME, visitor);
+          document.getElementById("distWrap").innerHTML = kmNum < 25
+  ? ' — and it looks like we\'re <span class="dist">practically neighbours</span>'
+  : ', roughly <span class="dist">' + kmNum.toLocaleString("en-US") + ' km</span> away from your current location';
         }
       } catch (e) { console.warn("location unavailable", e); }
 
