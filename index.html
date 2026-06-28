@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- EDIT: page title shown in the browser tab -->
+  <title>Enrico Marcato</title>
+  <meta name="description" content="" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:     #F8F7F3;   /* warm paper */
+      --ink:    #17181A;   /* near-black text */
+      --muted:  #6E6B63;   /* secondary text */
+      --line:   #E4E0D7;   /* hairlines */
+      --accent: #BC4B2F;   /* Dutch bike-lane brick red, used sparingly */
+      --max:    640px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Newsreader", Georgia, serif;
+      font-size: 19px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14vh 24px 12vh;
+    }
+
+    /* mono eyebrows / labels — a small nod to the engineering side */
+    .eyebrow {
+      font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 18px;
+      height: 2px;
+      background: var(--accent);
+      display: inline-block;
+    }
+
+    h1 {
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-weight: 600;
+      font-size: clamp(40px, 9vw, 64px);
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+      margin: 0 0 22px;
+    }
+
+    .lede {
+      font-size: clamp(21px, 3.4vw, 25px);
+      line-height: 1.5;
+      margin: 0 0 8px;
+    }
+    .lede em { font-style: italic; }
+
+    section { margin-top: 64px; }
+
+    h2 {
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-weight: 500;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 18px;
+    }
+
+    p { margin: 0 0 18px; }
+
+    a {
+      color: var(--ink);
+      text-decoration: none;
+      background-image: linear-gradient(var(--accent), var(--accent));
+      background-size: 100% 1.5px;
+      background-repeat: no-repeat;
+      background-position: 0 100%;
+      padding-bottom: 1px;
+      transition: background-size 0.25s ease;
+    }
+    a:hover, a:focus-visible { background-size: 0% 1.5px; color: var(--accent); }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+    /* projects */
+    .project {
+      padding: 18px 0;
+      border-top: 1px solid var(--line);
+    }
+    .project:last-child { border-bottom: 1px solid var(--line); }
+    .project h3 {
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-weight: 600;
+      font-size: 21px;
+      margin: 0 0 4px;
+    }
+    .project p { color: var(--muted); font-size: 17px; margin: 0; }
+
+    /* contact line — terminal-ish, ties to the engineering identity */
+    .links {
+      font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+      font-size: 15px;
+      line-height: 2.1;
+    }
+    .links span { color: var(--muted); }
+
+    footer {
+      margin-top: 72px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* gentle entrance, disabled for anyone who prefers no motion */
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal { opacity: 0; transform: translateY(14px); animation: rise 0.7s cubic-bezier(.2,.7,.3,1) forwards; }
+      .reveal:nth-child(2) { animation-delay: 0.08s; }
+      .reveal:nth-child(3) { animation-delay: 0.16s; }
+      @keyframes rise { to { opacity: 1; transform: none; } }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+
+    <!-- ===== HERO ===== -->
+    <p class="eyebrow reveal">Software &amp; integration engineer · Netherlands</p>
+    <h1 class="reveal">Enrico Marcato</h1>
+    <p class="lede reveal">
+      Hi there, I'm Enrico. 
+    </p>
+
+    <!-- ===== ABOUT ===== -->
+    <section>
+      <h2>About me</h2>
+      <p>
+
+      </p>
+      <p>
+        <!-- EDIT: swap the line above for whatever you're actually into right now -->
+      </p>
+    </section>
+
+    <!-- ===== PROJECTS =====
+         To add a project: copy one .project block, change the text, point the link
+         at your repo or a live page. Delete the placeholder once you ship the first one. -->
+    <section>
+      <h2></h2>
+
+      <div class="project">
+
+      </div>
+
+      <!-- Example of a real one (uncomment + edit when ready):
+      <div class="project">
+        <h3><a href="https://github.com/yourusername/your-repo">EDI flow monitor</a></h3>
+        <p>A small dashboard that flags failed transmissions before anyone notices.</p>
+      </div>
+      -->
+    </section>
+
+    <!-- ===== REACH OUT ===== -->
+    <section>
+      <h2>Say hello</h2>
+      <p class="links">
+        <span>email&nbsp;&nbsp;→</span> <a href="mailto:enricmarcato@gmail.com">enricmarcato@gmail.com</a><br />
+        <span>linkedin →</span> <a href="https://www.linkedin.com/in/enrimarcato">/in/enrimarcato</a><br />
+        <!-- EDIT: replace with your GitHub username -->
+        <span>github&nbsp;&nbsp;→</span> <a href="https://github.com/yourusername">/enricomarcato</a>
+      </p>
+    </section>
+
+    <footer>
+      © <span id="y"></span> Enrico Marcato · hosted on GitHub Pages
+    </footer>
+  </main>
+
+  <script>
+    // keeps the year current without you touching it
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
