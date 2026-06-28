@@ -159,6 +159,92 @@
     <section>
       <h2>About me</h2>
       <p>
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>where from</title>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #F8F7F3;
+      --ink: #17181A;
+      --muted: #6E6B63;
+      --accent: #BC4B2F;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Newsreader", Georgia, serif;
+      padding: 24px;
+    }
+
+    /* ===== this is the only part you copy into your real page ===== */
+    .from-here {
+      max-width: 520px;
+      font-size: 21px;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .from-here .dist { color: var(--accent); font-style: italic; font-weight: 500; }
+    .from-here .note { display: block; margin-top: 8px; font-size: 14px; color: var(--muted); }
+    /* ============================================================== */
+  </style>
+</head>
+<body>
+  <p class="from-here" id="fromHere">
+    <!-- EDIT: change "Rotterdam, Netherlands" to wherever you want to say you're from.
+         The distance fills in by itself. -->
+    I'm from The Hague, Netherlands<span id="distWrap"></span>.
+    <span class="note">based on your IP address</span>
+  </p>
+
+  <script>
+    // EDIT: your home coordinates. The Hague is filled in.
+    // Find any place's lat/long by right-clicking it on Google Maps.
+    const HOME = { lat: 51.9244, lon: 4.4777 };
+
+    // great-circle distance in km (Haversine)
+    function distanceKm(a, b) {
+      const R = 6371;
+      const toRad = d => d * Math.PI / 180;
+      const dLat = toRad(b.lat - a.lat);
+      const dLon = toRad(b.lon - a.lon);
+      const x = Math.sin(dLat / 2) ** 2 +
+                Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) *
+                Math.sin(dLon / 2) ** 2;
+      return Math.round(2 * R * Math.asin(Math.sqrt(x)));
+    }
+
+    async function showDistance() {
+      try {
+        // free, https, no key. If it ever rate-limits, swap for another
+        // IP-geo endpoint (e.g. https://ipwho.is/).
+        const res = await fetch("https://ipapi.co/json/");
+        if (!res.ok) throw new Error("geo lookup failed");
+        const data = await res.json();
+        const visitor = { lat: data.latitude, lon: data.longitude };
+        if (typeof visitor.lat !== "number" || typeof visitor.lon !== "number") throw new Error("no coords");
+
+        const km = distanceKm(HOME, visitor).toLocaleString("en-US");
+        document.getElementById("distWrap").innerHTML =
+          ' — roughly <span class="dist">' + km + ' km</span> from where you are right now';
+      } catch (e) {
+        // graceful fallback: the sentence still reads fine without the distance
+        console.warn("distance unavailable:", e);
+      }
+    }
+
+    showDistance();
+  </script>
+</body>
+</html>
 
       </p>
       <p>
