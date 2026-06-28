@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>where from — globe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --accent: #FF3B6B;   /* the arc colour from the screenshot */
+      --card:   #11151C;   /* dark globe card */
+      --ocean:  #1B2330;
+      --land:   #2C3645;
+      --grid:   rgba(255,255,255,0.06);
+      --pin:    #C3CAD4;
+      --text:   #E6E9ED;
+      --muted:  #8A93A0;
+    }
+    body {
+      margin: 0; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: #F8F7F3;            /* your page background; the card sits on top */
+      font-family: "Newsreader", Georgia, serif;
+      padding: 24px;
+    }
+
+    /* ===== this whole .globe-card is what you copy into your page ===== */
+    .globe-card {
+      width: 100%; max-width: 560px;
+      background: var(--card);
+      border-radius: 18px;
+      padding: 14px 14px 26px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.18);
+      color: var(--text);
+    }
+    .globe-card svg { display: block; width: 100%; height: auto; border-radius: 12px; }
+    .globe-card .caption {
+      text-align: center; font-size: 19px; line-height: 1.55;
+      margin: 18px 12px 0;
+    }
+    .globe-card .dist { color: var(--accent); font-style: italic; font-weight: 500; }
+    .globe-card .sub { display:block; margin-top: 8px; font-size: 13px; color: var(--muted); }
+
+    .arc { fill: none; stroke: var(--accent); stroke-width: 2.4;
+           stroke-linecap: round; stroke-dasharray: 0.1 11; opacity: 0; }
+    .arc.show { opacity: 1; transition: opacity .5s ease; }
+    @media (prefers-reduced-motion: no-preference) {
+      .arc.show { animation: flow 1.4s linear infinite, fadein .5s ease; }
+      @keyframes flow { to { stroke-dashoffset: -22; } }
+      @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
+    }
+    /* ================================================================ */
+  </style>
+</head>
+<body>
+  <div class="globe-card">
+    <svg id="globe" viewBox="0 0 560 420" role="img" aria-label="A globe showing the distance from Rotterdam to your location"></svg>
+    <p class="caption" id="caption">
+      <!-- EDIT: change the place name here. The distance fills itself in. -->
+      I'm from Rotterdam, Netherlands<span id="distWrap"></span>.
+      <span class="sub">according to your IP address · no cookies, nothing stored</span>
+    </p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <script>
+    // EDIT: your home coordinates [longitude, latitude]. Rotterdam is set.
+    // Right-click any spot on Google Maps to read its lat/long.
+    const HOME = [4.4777, 51.9244];
+
+    const svg = d3.select("#globe");
+    const W = 560, H = 420;
+    const projection = d3.geoOrthographic()
+      .scale(195).translate([W / 2, H / 2]).clipAngle(90);
+    const path = d3.geoPath(projection);
+
+    function draw(visitor, land) {
+      // rotate the globe to sit halfway between home and the visitor
+      const target = visitor || HOME;
+      const mid = d3.geoInterpolate(HOME, target)(0.5);
+      projection.rotate([-mid[0], -mid[1] * 0.7]);
+
+      // ocean sphere
+      svg.append("path").attr("d", path({ type: "Sphere" })).attr("fill", "var(--ocean)");
+      // graticule
+      svg.append("path").attr("d", path(d3.geoGraticule10()))
+         .attr("fill", "none").attr("stroke", "var(--grid)").attr("stroke-width", 0.6);
+      // land
+      if (land) {
+        svg.append("path").attr("d", path(land))
+           .attr("fill", "var(--land)").attr("stroke", "rgba(0,0,0,.25)").attr("stroke-width", .4);
+      }
+
+      // the dashed great-circle arc (only if we know where the visitor is)
+      if (visitor) {
+        svg.append("path")
+           .attr("class", "arc show")
+           .attr("d", path({ type: "LineString", coordinates: [HOME, visitor] }));
+      }
+
+      // markers — a soft dot at home, a pin at the visitor
+      marker(HOME, "var(--accent)", true);
+      if (visitor) marker(visitor, "var(--pin)", false);
+    }
+
+    function marker(coord, color, isHome) {
+      const p = projection(coord);
+      if (!p) return; // on the far side of the globe, skip
+      const g = svg.append("g").attr("transform", `translate(${p[0]},${p[1]})`);
+      if (isHome) {
+        g.append("circle").attr("r", 9).attr("fill", color).attr("opacity", .25);
+        g.append("circle").attr("r", 4).attr("fill", color);
+      } else {
+        g.append("circle").attr("r", 5).attr("fill", color);
+        g.append("circle").attr("r", 5).attr("fill", "none")
+         .attr("stroke", color).attr("stroke-width", 2).attr("opacity", .4)
+         .append("animate").attr("attributeName", "r").attr("values", "5;11;5")
+         .attr("dur", "2.2s").attr("repeatCount", "indefinite");
+      }
+    }
+
+    function distanceKm(a, b) {
+      const R = 6371, toRad = d => d * Math.PI / 180;
+      const dLat = toRad(b[1] - a[1]), dLon = toRad(b[0] - a[0]);
+      const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a[1]))*Math.cos(toRad(b[1]))*Math.sin(dLon/2)**2;
+      return Math.round(2 * R * Math.asin(Math.sqrt(x)));
+    }
+
+    async function init() {
+      let land = null, visitor = null;
+      // load the world map (fails quietly -> globe just has no land)
+      try {
+        const world = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json").then(r => r.json());
+        land = topojson.feature(world, world.objects.land);
+      } catch (e) { console.warn("map unavailable", e); }
+      // look up the visitor (fails quietly -> globe centres on home, no arc)
+      try {
+        const d = await fetch("https://ipapi.co/json/").then(r => r.json());
+        if (typeof d.latitude === "number" && typeof d.longitude === "number") {
+          visitor = [d.longitude, d.latitude];
+          const km = distanceKm(HOME, visitor).toLocaleString("en-US");
+          document.getElementById("distWrap").innerHTML =
+            ', roughly <span class="dist">' + km + ' km</span> away from your current location';
+        }
+      } catch (e) { console.warn("location unavailable", e); }
+
+      draw(visitor, land);
+    }
+
+    init();
+  </script>
+</body>
+</html>
