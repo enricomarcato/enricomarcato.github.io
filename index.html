@@ -146,29 +146,28 @@
 
     /* globe card */
     .globe-card {
+      position: relative;
       width: 100%;
-      background: #11151C;
-      border-radius: 18px;
-      padding: 14px 14px 26px;
-      box-shadow: 0 18px 50px rgba(0,0,0,0.18);
+      background:
+        radial-gradient(125% 120% at 50% -10%, #1B2740 0%, #0F141D 55%, #0A0D13 100%);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 8px 8px 24px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.05);
       color: #E6E9ED;
       margin-bottom: 24px;
+      overflow: hidden;
     }
-    .globe-card svg { display: block; width: 100%; height: auto; border-radius: 12px; }
+    .globe-card svg { display: block; width: 100%; height: auto; }
     .globe-card .caption {
       text-align: center; font-size: 19px; line-height: 1.55;
-      margin: 18px 12px 0;
+      margin: 12px 18px 0;
     }
     .globe-card .dist { color: #FF3B6B; font-style: italic; font-weight: 500; }
-    .globe-card .sub { display: block; margin-top: 8px; font-size: 13px; color: #8A93A0; }
-
-    .globe-arc { fill: none; stroke: #FF3B6B; stroke-width: 2.4;
-                 stroke-linecap: round; stroke-dasharray: 0.1 11; opacity: 0; }
-    .globe-arc.show { opacity: 1; transition: opacity .5s ease; }
-    @media (prefers-reduced-motion: no-preference) {
-      .globe-arc.show { animation: globe-flow 1.4s linear infinite, globe-fadein .5s ease; }
-      @keyframes globe-flow { to { stroke-dashoffset: -22; } }
-      @keyframes globe-fadein { from { opacity: 0; } to { opacity: 1; } }
+    .globe-card .sub {
+      display: block; margin-top: 9px;
+      font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+      font-size: 12px; letter-spacing: 0.03em; color: #7E8794;
     }
   </style>
 </head>
@@ -186,10 +185,10 @@
     <section>
       <h2>About me</h2>
       <div class="globe-card">
-        <svg id="globe" viewBox="0 0 560 420" role="img" aria-label="A globe showing the distance from The Hague to your location"></svg>
+        <svg id="globe" viewBox="0 0 560 470" role="img" aria-label="A globe showing the distance from The Hague to your location"></svg>
         <p class="caption">
-          I'm from The Hague, Netherlands<span id="distWrap"></span>.
-          <span class="sub">based on your IP address</span>
+          <span id="line">I'm from The Hague, Netherlands.</span>
+          <span class="sub" id="sub">based on your IP address</span>
         </p>
       </div>
     </section>
@@ -235,94 +234,239 @@
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
   <script>
-    const HOME = [4.4777, 51.9244]; // [lon, lat] — The Hague
+  (function () {
+    const HOME = [4.4777, 51.9244];      // [lon, lat] — The Hague
+    const PLACE = "The Hague, Netherlands";
+    const SAME_KM = 30;                   // within this, "Just like you."
 
     const C = {
-      accent: '#FF3B6B',
-      ocean:  '#1B2330',
-      land:   '#2C3645',
-      grid:   'rgba(255,255,255,0.06)',
-      pin:    '#C3CAD4',
+      accent: "#FF3B6B",   // home + arc + distance text
+      pin:    "#EAF0F7",   // visitor marker
+      grid:   "rgba(255,255,255,0.07)",
     };
 
-    const W = 560, H = 420;
-    const projection = d3.geoOrthographic().scale(195).translate([W/2, H/2]).clipAngle(90);
+    const W = 560, H = 470, PAD = 70;     // PAD keeps markers off the edges
+    const MIN = 196;                      // whole globe fits the card
+    const MAX = 1500;                     // don't over-zoom tiny distances
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const ease = d3.easeCubicInOut;
+
+    const projection = d3.geoOrthographic()
+      .clipAngle(90).translate([W / 2, H / 2]).scale(MIN)
+      .rotate([-HOME[0], -HOME[1]]);
     const path = d3.geoPath(projection);
+    const graticule = d3.geoGraticule10();
+
     const svg = d3.select("#globe");
 
-    function draw(visitor, land) {
-      const target = visitor || HOME;
+    // ---- gradients & glow filters -----------------------------------------
+    const defs = svg.append("defs");
+    const ocean = defs.append("radialGradient")
+      .attr("id", "ocean").attr("cx", "50%").attr("cy", "36%").attr("r", "75%");
+    ocean.append("stop").attr("offset", "0%").attr("stop-color", "#26344B");
+    ocean.append("stop").attr("offset", "70%").attr("stop-color", "#161F2E");
+    ocean.append("stop").attr("offset", "100%").attr("stop-color", "#0C121C");
 
-      // zoom in for nearby visitors, full globe for distant ones
-      // each point sits scale*sin(ang/2) px from the midpoint in orthographic projection,
-      // so fitting them in ~70% of the viewport width gives: scale = 100/sin(ang/2)
-      const ang = d3.geoDistance(HOME, target);
-      const scale = visitor ? Math.max(195, Math.min(1400, 100 / Math.sin(ang / 2))) : 195;
-      projection.scale(scale);
+    const halo = defs.append("radialGradient")
+      .attr("id", "halo").attr("cx", "50%").attr("cy", "50%").attr("r", "50%");
+    halo.append("stop").attr("offset", "82%").attr("stop-color", "rgba(80,140,220,0)");
+    halo.append("stop").attr("offset", "94%").attr("stop-color", "rgba(96,150,230,0.22)");
+    halo.append("stop").attr("offset", "100%").attr("stop-color", "rgba(96,150,230,0)");
 
-      const mid = d3.geoInterpolate(HOME, target)(0.5);
-      projection.rotate([-mid[0], -mid[1] * 0.7]);
+    const arcGrad = defs.append("linearGradient")
+      .attr("id", "arcGrad").attr("gradientUnits", "userSpaceOnUse");
+    arcGrad.append("stop").attr("offset", "0%").attr("stop-color", C.accent);
+    arcGrad.append("stop").attr("offset", "100%").attr("stop-color", C.pin);
 
-      svg.append("path").attr("d", path({type: "Sphere"})).attr("fill", C.ocean);
-      svg.append("path").attr("d", path(d3.geoGraticule10()))
-         .attr("fill", "none").attr("stroke", C.grid).attr("stroke-width", 0.6);
-      if (land) {
-        svg.append("path").attr("d", path(land))
-           .attr("fill", C.land).attr("stroke", "rgba(0,0,0,.25)").attr("stroke-width", .4);
+    const blur = defs.append("filter")
+      .attr("id", "soft").attr("x", "-60%").attr("y", "-60%")
+      .attr("width", "220%").attr("height", "220%");
+    blur.append("feGaussianBlur").attr("stdDeviation", "3.2");
+
+    // ---- layers (created once, updated each frame) -------------------------
+    const gHalo = svg.append("circle").attr("cx", W / 2).attr("cy", H / 2).attr("fill", "url(#halo)");
+    const gSphere = svg.append("path").attr("fill", "url(#ocean)")
+      .attr("stroke", "rgba(120,160,210,0.18)").attr("stroke-width", 1);
+    const gGrid = svg.append("path").attr("fill", "none").attr("stroke", C.grid).attr("stroke-width", 0.6);
+    const gLand = svg.append("path").attr("fill", "#33425A")
+      .attr("stroke", "rgba(0,0,0,0.30)").attr("stroke-width", 0.4);
+    const gArcGlow = svg.append("path").attr("fill", "none").attr("stroke", C.accent)
+      .attr("stroke-width", 5).attr("stroke-linecap", "round")
+      .attr("opacity", 0.5).attr("filter", "url(#soft)");
+    const gArc = svg.append("path").attr("fill", "none").attr("stroke", "url(#arcGrad)")
+      .attr("stroke-width", 2.4).attr("stroke-linecap", "round");
+    const gHome = svg.append("g");
+    const gVisit = svg.append("g");
+    const gPulse = svg.append("circle").attr("r", 3).attr("fill", "#fff").attr("opacity", 0);
+
+    // soft halo + solid core, with an expanding ping ring
+    function buildMarker(g, color, coreR) {
+      g.append("circle").attr("class", "ping").attr("r", coreR)
+        .attr("fill", "none").attr("stroke", color).attr("stroke-width", 2).attr("opacity", 0);
+      g.append("circle").attr("r", coreR + 5).attr("fill", color).attr("opacity", 0.22);
+      g.append("circle").attr("r", coreR).attr("fill", color);
+      if (!reduce) {
+        g.select(".ping").attr("opacity", 0.5)
+          .append("animate").attr("attributeName", "r")
+          .attr("values", coreR + ";" + (coreR + 9) + ";" + coreR)
+          .attr("dur", "2.4s").attr("repeatCount", "indefinite");
+        g.select(".ping").append("animate").attr("attributeName", "opacity")
+          .attr("values", "0.5;0;0.5").attr("dur", "2.4s").attr("repeatCount", "indefinite");
       }
+    }
+    buildMarker(gHome, C.accent, 4.5);
+    buildMarker(gVisit, C.pin, 4.5);
 
-      if (visitor) {
-        svg.append("path")
-           .attr("class", "globe-arc show")
-           .attr("d", path({type: "LineString", coordinates: [HOME, visitor]}));
-      }
-
-      marker(HOME, C.accent, true);
-      if (visitor) marker(visitor, C.pin, false);
+    // a point is on the near (visible) hemisphere of the globe
+    function onFront(coord) {
+      const r = projection.rotate();
+      return d3.geoDistance(coord, [-r[0], -r[1]]) < Math.PI / 2 - 0.001;
+    }
+    function place(g, coord) {
+      const p = projection(coord);
+      if (p && onFront(coord)) g.attr("transform", `translate(${p[0]},${p[1]})`).style("display", null);
+      else g.style("display", "none");
     }
 
-    function marker(coord, color, isHome) {
-      const p = projection(coord);
-      if (!p) return;
-      const g = svg.append("g").attr("transform", `translate(${p[0]},${p[1]})`);
-      if (isHome) {
-        g.append("circle").attr("r", 9).attr("fill", color).attr("opacity", .25);
-        g.append("circle").attr("r", 4).attr("fill", color);
+    // sample the great circle so the arc bends correctly with the globe
+    function arcLine(visitor, t) {
+      const gi = d3.geoInterpolate(HOME, visitor), n = 80, c = [];
+      for (let i = 0; i <= n; i++) c.push(gi((i / n) * t));
+      return { type: "LineString", coordinates: c };
+    }
+
+    let land = null, current = null;     // current = visitor or null
+    let timer = null;                    // only one animation timer at a time
+    function run(cb) { if (timer) timer.stop(); timer = d3.timer(cb); }
+
+    function render(arcT) {
+      const s = projection.scale();
+      gHalo.attr("r", s * 1.16);
+      gSphere.attr("d", path({ type: "Sphere" }));
+      gGrid.attr("d", path(graticule));
+      if (land) gLand.attr("d", path(land));
+
+      if (current && arcT > 0) {
+        const line = arcLine(current, arcT);
+        const d = path(line);
+        gArc.attr("d", d).style("display", null);
+        gArcGlow.attr("d", d).style("display", null);
+        // anchor the gradient to the two endpoints on screen
+        const a = projection(HOME), b = projection(current);
+        if (a && b) arcGrad.attr("x1", a[0]).attr("y1", a[1]).attr("x2", b[0]).attr("y2", b[1]);
       } else {
-        g.append("circle").attr("r", 5).attr("fill", color);
-        g.append("circle").attr("r", 5).attr("fill", "none")
-         .attr("stroke", color).attr("stroke-width", 2).attr("opacity", .4)
-         .append("animate").attr("attributeName", "r").attr("values", "5;11;5")
-         .attr("dur", "2.2s").attr("repeatCount", "indefinite");
+        gArc.style("display", "none");
+        gArcGlow.style("display", "none");
       }
+
+      place(gHome, HOME);
+      if (current && arcT >= 1) place(gVisit, current); else gVisit.style("display", "none");
+    }
+
+    // frame the journey: rotate centre to the midpoint, fitExtent does scale+translate
+    function frame(visitor) {
+      const mid = d3.geoInterpolate(HOME, visitor)(0.5);
+      projection.rotate([-mid[0], -mid[1]]).scale(MIN).translate([W / 2, H / 2]);
+      projection.fitExtent([[PAD, PAD], [W - PAD, H - PAD]],
+        { type: "LineString", coordinates: [HOME, visitor] });
+      const scale = clamp(projection.scale(), MIN, MAX);
+      projection.scale(scale).translate([W / 2, H / 2]);
+      return { rotate: [-mid[0], -mid[1]], scale };
+    }
+
+    // gently turn + zoom from home to the framed view, then draw the arc
+    function flyTo(visitor) {
+      current = visitor;
+      const dest = frame(visitor);
+      const rot0 = [-HOME[0], -HOME[1]];
+      const rotI = d3.interpolate(rot0, dest.rotate);
+      const sclI = d3.interpolate(MIN, dest.scale);
+      const DA = reduce ? 0 : 1000, DB = reduce ? 0 : 850;
+
+      if (reduce) {
+        projection.rotate(dest.rotate).scale(dest.scale).translate([W / 2, H / 2]);
+        render(1); travel(visitor); return;
+      }
+      run((t) => {
+        if (t < DA) {
+          const k = ease(t / DA);
+          projection.rotate(rotI(k)).scale(sclI(k)).translate([W / 2, H / 2]);
+          render(0);
+        } else {
+          projection.rotate(dest.rotate).scale(dest.scale).translate([W / 2, H / 2]);
+          const tb = Math.min(1, (t - DA) / DB);
+          render(ease(tb));
+          if (tb >= 1) travel(visitor);   // run() stops this timer, starts the next
+        }
+      });
+    }
+
+    // a small light that keeps travelling home -> visitor along the arc
+    function travel(visitor) {
+      if (reduce) { if (timer) timer.stop(); return; }
+      const gi = d3.geoInterpolate(HOME, visitor);
+      run((el) => {
+        const t = (el % 2600) / 2600, c = gi(t), p = projection(c);
+        if (p && onFront(c)) gPulse.attr("cx", p[0]).attr("cy", p[1]).attr("opacity", 0.9);
+        else gPulse.attr("opacity", 0);
+      });
+    }
+
+    // slow idle spin when we don't know where the visitor is
+    function idleSpin() {
+      current = null;
+      projection.scale(MIN * 1.02).translate([W / 2, H / 2]);
+      gVisit.style("display", "none");
+      if (reduce) { if (timer) timer.stop(); projection.rotate([-HOME[0], -HOME[1]]); render(0); return; }
+      run((el) => {
+        projection.rotate([-HOME[0] - el * 0.004, -28]);
+        render(0);
+      });
     }
 
     function distanceKm(a, b) {
-      const R = 6371, toRad = d => d * Math.PI / 180;
-      const dLat = toRad(b[1] - a[1]), dLon = toRad(b[0] - a[0]);
-      const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dLon/2)**2;
+      const R = 6371, rad = d => d * Math.PI / 180;
+      const dLat = rad(b[1] - a[1]), dLon = rad(b[0] - a[0]);
+      const x = Math.sin(dLat / 2) ** 2 +
+                Math.cos(rad(a[1])) * Math.cos(rad(b[1])) * Math.sin(dLon / 2) ** 2;
       return Math.round(2 * R * Math.asin(Math.sqrt(x)));
     }
 
+    function caption(km) {
+      const line = document.getElementById("line");
+      if (km == null) { line.textContent = `I'm from ${PLACE}.`; return; }
+      if (km <= SAME_KM) {
+        line.innerHTML = `I'm from ${PLACE}. <span class="dist">Just like you.</span>`;
+      } else {
+        line.innerHTML = `I'm from ${PLACE}, roughly ` +
+          `<span class="dist">${km.toLocaleString("en-US")} km</span> ` +
+          `away from your current location.`;
+      }
+    }
+
     async function init() {
-      let land = null, visitor = null;
       try {
         const world = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json").then(r => r.json());
         land = topojson.feature(world, world.objects.land);
-      } catch(e) { console.warn("map unavailable", e); }
+      } catch (e) { console.warn("map unavailable", e); }
+
+      let visitor = null, km = null;
       try {
         const d = await fetch("https://ipapi.co/json/").then(r => r.json());
         if (typeof d.latitude === "number" && typeof d.longitude === "number") {
           visitor = [d.longitude, d.latitude];
-          const kmNum = distanceKm(HOME, visitor);
-          document.getElementById("distWrap").innerHTML =
-            ', roughly <span class="dist">' + kmNum.toLocaleString("en-US") + ' km</span> away from your current location';
+          km = distanceKm(HOME, visitor);
         }
-      } catch(e) { console.warn("location unavailable", e); }
-      draw(visitor, land);
+      } catch (e) { console.warn("location unavailable", e); }
+
+      caption(km);
+      if (visitor && km > SAME_KM) flyTo(visitor);  // a real journey to draw
+      else idleSpin();                              // unknown, or basically here
     }
 
     init();
+  })();
   </script>
 </body>
 </html>
