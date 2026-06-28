@@ -261,7 +261,7 @@
       projection.scale(scale);
 
       const mid = d3.geoInterpolate(HOME, target)(0.5);
-      projection.rotate([-mid[0], -mid[1] * 0.7]);
+      projection.rotate([-mid[0], -mid[1]]);
 
       svg.append("path").attr("d", path({type: "Sphere"})).attr("fill", C.ocean);
       svg.append("path").attr("d", path(d3.geoGraticule10()))
