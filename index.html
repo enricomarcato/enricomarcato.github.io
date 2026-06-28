@@ -143,6 +143,33 @@
       .reveal:nth-child(3) { animation-delay: 0.16s; }
       @keyframes rise { to { opacity: 1; transform: none; } }
     }
+
+    /* globe card */
+    .globe-card {
+      width: 100%;
+      background: #11151C;
+      border-radius: 18px;
+      padding: 14px 14px 26px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.18);
+      color: #E6E9ED;
+      margin-bottom: 24px;
+    }
+    .globe-card svg { display: block; width: 100%; height: auto; border-radius: 12px; }
+    .globe-card .caption {
+      text-align: center; font-size: 19px; line-height: 1.55;
+      margin: 18px 12px 0;
+    }
+    .globe-card .dist { color: #FF3B6B; font-style: italic; font-weight: 500; }
+    .globe-card .sub { display: block; margin-top: 8px; font-size: 13px; color: #8A93A0; }
+
+    .globe-arc { fill: none; stroke: #FF3B6B; stroke-width: 2.4;
+                 stroke-linecap: round; stroke-dasharray: 0.1 11; opacity: 0; }
+    .globe-arc.show { opacity: 1; transition: opacity .5s ease; }
+    @media (prefers-reduced-motion: no-preference) {
+      .globe-arc.show { animation: globe-flow 1.4s linear infinite, globe-fadein .5s ease; }
+      @keyframes globe-flow { to { stroke-dashoffset: -22; } }
+      @keyframes globe-fadein { from { opacity: 0; } to { opacity: 1; } }
+    }
   </style>
 </head>
 <body>
@@ -158,11 +185,13 @@
     <!-- ===== ABOUT ===== -->
     <section>
       <h2>About me</h2>
-      <p>
-      </p>
-      <p>
-        <!-- EDIT: swap the line above for whatever you're actually into right now -->
-      </p>
+      <div class="globe-card">
+        <svg id="globe" viewBox="0 0 560 420" role="img" aria-label="A globe showing the distance from The Hague to your location"></svg>
+        <p class="caption">
+          I'm from The Hague, Netherlands<span id="distWrap"></span>.
+          <span class="sub">based on your IP address</span>
+        </p>
+      </div>
     </section>
 
     <!-- ===== PROJECTS =====
@@ -200,8 +229,100 @@
   </main>
 
   <script>
-    // keeps the year current without you touching it
     document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <script>
+    const HOME = [4.4777, 51.9244]; // [lon, lat] — The Hague
+
+    const C = {
+      accent: '#FF3B6B',
+      ocean:  '#1B2330',
+      land:   '#2C3645',
+      grid:   'rgba(255,255,255,0.06)',
+      pin:    '#C3CAD4',
+    };
+
+    const W = 560, H = 420;
+    const projection = d3.geoOrthographic().scale(195).translate([W/2, H/2]).clipAngle(90);
+    const path = d3.geoPath(projection);
+    const svg = d3.select("#globe");
+
+    function draw(visitor, land) {
+      const target = visitor || HOME;
+
+      // zoom in for nearby visitors, full globe for distant ones
+      // each point sits scale*sin(ang/2) px from the midpoint in orthographic projection,
+      // so fitting them in ~70% of the viewport width gives: scale = 100/sin(ang/2)
+      const ang = d3.geoDistance(HOME, target);
+      const scale = visitor ? Math.max(195, Math.min(1400, 100 / Math.sin(ang / 2))) : 195;
+      projection.scale(scale);
+
+      const mid = d3.geoInterpolate(HOME, target)(0.5);
+      projection.rotate([-mid[0], -mid[1] * 0.7]);
+
+      svg.append("path").attr("d", path({type: "Sphere"})).attr("fill", C.ocean);
+      svg.append("path").attr("d", path(d3.geoGraticule10()))
+         .attr("fill", "none").attr("stroke", C.grid).attr("stroke-width", 0.6);
+      if (land) {
+        svg.append("path").attr("d", path(land))
+           .attr("fill", C.land).attr("stroke", "rgba(0,0,0,.25)").attr("stroke-width", .4);
+      }
+
+      if (visitor) {
+        svg.append("path")
+           .attr("class", "globe-arc show")
+           .attr("d", path({type: "LineString", coordinates: [HOME, visitor]}));
+      }
+
+      marker(HOME, C.accent, true);
+      if (visitor) marker(visitor, C.pin, false);
+    }
+
+    function marker(coord, color, isHome) {
+      const p = projection(coord);
+      if (!p) return;
+      const g = svg.append("g").attr("transform", `translate(${p[0]},${p[1]})`);
+      if (isHome) {
+        g.append("circle").attr("r", 9).attr("fill", color).attr("opacity", .25);
+        g.append("circle").attr("r", 4).attr("fill", color);
+      } else {
+        g.append("circle").attr("r", 5).attr("fill", color);
+        g.append("circle").attr("r", 5).attr("fill", "none")
+         .attr("stroke", color).attr("stroke-width", 2).attr("opacity", .4)
+         .append("animate").attr("attributeName", "r").attr("values", "5;11;5")
+         .attr("dur", "2.2s").attr("repeatCount", "indefinite");
+      }
+    }
+
+    function distanceKm(a, b) {
+      const R = 6371, toRad = d => d * Math.PI / 180;
+      const dLat = toRad(b[1] - a[1]), dLon = toRad(b[0] - a[0]);
+      const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dLon/2)**2;
+      return Math.round(2 * R * Math.asin(Math.sqrt(x)));
+    }
+
+    async function init() {
+      let land = null, visitor = null;
+      try {
+        const world = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json").then(r => r.json());
+        land = topojson.feature(world, world.objects.land);
+      } catch(e) { console.warn("map unavailable", e); }
+      try {
+        const d = await fetch("https://ipapi.co/json/").then(r => r.json());
+        if (typeof d.latitude === "number" && typeof d.longitude === "number") {
+          visitor = [d.longitude, d.latitude];
+          const kmNum = distanceKm(HOME, visitor);
+          document.getElementById("distWrap").innerHTML =
+            ', roughly <span class="dist">' + kmNum.toLocaleString("en-US") + ' km</span> away from your current location';
+        }
+      } catch(e) { console.warn("location unavailable", e); }
+      draw(visitor, land);
+    }
+
+    init();
   </script>
 </body>
 </html>
