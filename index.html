@@ -71,6 +71,15 @@
       margin: 0 0 22px;
     }
 
+    /* the name doubles as the home link — keep it looking like the heading */
+    h1 a.home {
+      color: inherit;
+      background: none;
+      padding: 0;
+      transition: color 0.25s ease;
+    }
+    h1 a.home:hover, h1 a.home:focus-visible { color: var(--accent); }
+
     .lede {
       font-size: clamp(21px, 3.4vw, 25px);
       line-height: 1.5;
@@ -176,7 +185,7 @@
 
     <!-- ===== HERO ===== -->
     <p class="eyebrow reveal"></p>
-    <h1 class="reveal">Enrico Marcato</h1>
+    <h1 class="reveal"><a class="home" href="/" aria-label="Home">Enrico Marcato</a></h1>
     <p class="lede reveal">
       Hi there, I'm Enrico. 
     </p>
