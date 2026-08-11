@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notes — Enrico Marcato</title>
+  <meta name="description" content="A diary of what I'm learning and building." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="wrap">
+
+    <header class="topbar reveal">
+      <h1><a class="home" href="/" aria-label="Home">Enrico Marcato</a> <span class="here">/ notes</span></h1>
+      <nav><a href="/">about me</a></nav>
+    </header>
+
+    <p class="lede reveal">
+      Things I'm learning, and what happened when I tried them.
+    </p>
+
+    <section>
+      <h2>All notes</h2>
+
+      <div class="note-list">
+        <!-- To add a note: copy one .note block, newest first, and point the
+             link at the note's own page (e.g. notes/keeping-a-diary.html).
+        <div class="note">
+          <h3><a href="/notes/keeping-a-diary.html">Keeping a diary of what I learn</a></h3>
+          <p class="date">August 2026</p>
+          <p class="blurb">One line on what the note is about.</p>
+        </div>
+        -->
+
+        <p class="empty">Nothing published yet — the first one is being written.</p>
+      </div>
+    </section>
+
+    <footer>
+      © <span id="y"></span> Enrico Marcato · hosted on GitHub Pages
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

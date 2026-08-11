@@ -1,0 +1,180 @@
+:root {
+  --bg:     #F8F7F3;   /* warm paper */
+  --ink:    #17181A;   /* near-black text */
+  --muted:  #6E6B63;   /* secondary text */
+  --line:   #E4E0D7;   /* hairlines */
+  --accent: #BC4B2F;   /* Dutch bike-lane brick red, used sparingly */
+  --max:    640px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 19px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.wrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 14vh 24px 12vh;
+}
+
+/* top bar — name on the left, section link on the right */
+.topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 22px;
+}
+.topbar h1 { margin: 0; }
+.topbar nav {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+h1 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  margin: 0 0 22px;
+}
+
+/* the name doubles as the home link — keep it looking like the heading */
+h1 a.home {
+  color: inherit;
+  background: none;
+  padding: 0;
+  transition: color 0.25s ease;
+}
+h1 a.home:hover, h1 a.home:focus-visible { color: var(--accent); }
+
+/* trailing part of the breadcrumb: "Enrico Marcato / notes" */
+h1 .here { color: var(--muted); font-weight: 500; }
+
+.lede {
+  font-size: clamp(21px, 3.4vw, 25px);
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+.lede em { font-style: italic; }
+
+section { margin-top: 64px; }
+
+h2 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+
+p { margin: 0 0 18px; }
+
+a {
+  color: var(--ink);
+  text-decoration: none;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 100% 1.5px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  padding-bottom: 1px;
+  transition: background-size 0.25s ease;
+}
+a:hover, a:focus-visible { background-size: 0% 1.5px; color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* projects */
+.project {
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+.project:last-child { border-bottom: 1px solid var(--line); }
+.project h3 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 21px;
+  margin: 0 0 4px;
+}
+.project p { color: var(--muted); font-size: 17px; margin: 0; }
+
+/* notes index — one entry per row, title then date */
+.note-list { margin: 0; }
+.note {
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+}
+.note:last-child { border-bottom: 1px solid var(--line); }
+.note h3 {
+  font-family: "Newsreader", Georgia, serif;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.25;
+  margin: 0 0 6px;
+}
+.note .date {
+  font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  margin: 0;
+}
+.note .blurb { color: var(--muted); font-size: 17px; margin: 8px 0 0; }
+
+/* short list of recent notes on the home page */
+.recent {
+  font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 2.1;
+  margin: 0;
+}
+.recent span { color: var(--muted); }
+
+/* placeholder while there's nothing published yet */
+.empty {
+  color: var(--muted);
+  font-style: italic;
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin: 0;
+}
+
+/* contact line — terminal-ish, ties to the engineering identity */
+.links {
+  font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 2.1;
+}
+.links span { color: var(--muted); }
+
+footer {
+  margin-top: 72px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* gentle entrance, disabled for anyone who prefers no motion */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(14px); animation: rise 0.7s cubic-bezier(.2,.7,.3,1) forwards; }
+  .reveal:nth-child(2) { animation-delay: 0.08s; }
+  .reveal:nth-child(3) { animation-delay: 0.16s; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+}
