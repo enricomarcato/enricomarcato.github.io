@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Why my idea doesn't actually work (yet) — Enrico Marcato</title>
+  <meta name="description" content="Failed messages, dead letter queues, and why a working tool isn't a working business." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="wrap">
+
+    <header class="topbar reveal">
+      <p class="crumb"><a class="home" href="/" aria-label="Home">Enrico Marcato</a> <span class="here">/ <a href="/notes/">notes</a></span></p>
+      <nav><a href="/">about me</a></nav>
+    </header>
+
+    <article class="article">
+      <h1>Why my idea doesn't actually work (yet)</h1>
+      <p class="date">October 2026</p>
+
+      <p>
+        I bumped into a classic problem for most integration architectures using APIs and which are using queues to
+        talk to each other. What fails from one to another will end up in dead letter queues, messages that won't be
+        so important unless you decide to do something about it. Those messages might be useful to reprocess if, for
+        a reason, they failed.
+      </p>
+      <p>
+        What is the pain? The pain really depends on your line of business. Let me give you a couple of examples. It
+        can be a payment not going well because of an unsupported currency or invalid card numbers. It can be an order
+        placed on your e-commerce that, for some reason, when it's time to deduct the stock from your external
+        warehouse, this one doesn't have stock anymore.
+      </p>
+      <p>
+        Downtime is expensive. Companies don't want just another tool to use and pay for.
+      </p>
+      <p>
+        Me and my boyz
+      </p>
+    </article>
+
+    <p class="back"><a href="/notes/">← all notes</a></p>
+
+    <footer>
+      © <span id="y"></span> Enrico Marcato · hosted on GitHub Pages
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

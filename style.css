@@ -52,17 +52,29 @@ h1 {
   margin: 0 0 22px;
 }
 
+/* on a note page the title is the h1, so the name sits in a .crumb styled the same */
+.crumb {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.crumb .here a { color: inherit; }
+
 /* the name doubles as the home link — keep it looking like the heading */
-h1 a.home {
+h1 a.home, .crumb a.home {
   color: inherit;
   background: none;
   padding: 0;
   transition: color 0.25s ease;
 }
-h1 a.home:hover, h1 a.home:focus-visible { color: var(--accent); }
+h1 a.home:hover, h1 a.home:focus-visible,
+.crumb a.home:hover, .crumb a.home:focus-visible { color: var(--accent); }
 
 /* trailing part of the breadcrumb: "Enrico Marcato / notes" */
-h1 .here { color: var(--muted); font-weight: 500; }
+h1 .here, .crumb .here { color: var(--muted); font-weight: 500; }
 
 .lede {
   font-size: clamp(21px, 3.4vw, 25px);
@@ -177,4 +189,32 @@ footer {
   .reveal:nth-child(2) { animation-delay: 0.08s; }
   .reveal:nth-child(3) { animation-delay: 0.16s; }
   @keyframes rise { to { opacity: 1; transform: none; } }
+}
+
+/* single note — title, date, then the text */
+.article { margin-top: 48px; }
+.article h1 {
+  font-family: "Newsreader", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(30px, 5vw, 36px);
+  line-height: 1.2;
+  letter-spacing: 0;
+  margin: 0 0 10px;
+}
+.article .date {
+  font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  margin: 0 0 36px;
+}
+
+/* way back to the list, under the note */
+.back {
+  margin: 56px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.02em;
 }
