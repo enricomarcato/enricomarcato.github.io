@@ -25,22 +25,116 @@
       <p class="date">October 2026</p>
 
       <p>
-        I bumped into a classic problem for most integration architectures using APIs and which are using queues to
-        talk to each other. What fails from one to another will end up in dead letter queues, messages that won't be
-        so important unless you decide to do something about it. Those messages might be useful to reprocess if, for
-        a reason, they failed.
+        I bumped into a classic problem in integration architecture. Systems talk to each other through APIs and
+        queues, and when a message fails on its way from one to another, it ends up in a dead letter queue. It
+        sits there, and it doesn't matter much unless you decide to do something about it. Some of those
+        messages are worth reprocessing. Others are only there to make you aware of something. It is worth
+        keeping them as data: analysed together, they can power dashboards and give real insight into how the
+        system behaves.
       </p>
       <p>
-        What is the pain? The pain really depends on your line of business. Let me give you a couple of examples. It
-        can be a payment not going well because of an unsupported currency or invalid card numbers. It can be an order
-        placed on your e-commerce that, for some reason, when it's time to deduct the stock from your external
-        warehouse, this one doesn't have stock anymore.
+        How much it hurts depends on your line of business. It can be a payment that failed because of an
+        unsupported currency or an invalid card number. It can be an order on your e-commerce site that fails
+        because, when it’s time to deduct the stock at your external warehouse, the item is no longer there.
       </p>
       <p>
-        Downtime is expensive. Companies don't want just another tool to use and pay for.
+        I thought it was a real pain for support engineers and SREs, and I started thinking about a solution
+        that would make their work easier and more efficient. I’m one of them myself. But above all, it matters
+        to their companies, which may have strict SLAs (service level agreements) on performance or response
+        time.
       </p>
       <p>
-        Me and my boyz
+        So I called two friends of mine and explained the idea, and surprisingly they were willing to help me
+        make it real. We spent our evenings on it for a few weeks and ended up with a working tool. It was a
+        good exercise, and this is how it started.
+      </p>
+      <p>
+        The tool is simply a small control plane for failed messages, bridging the gap between the alert and the
+        action. Monitors say when a queue is filling up or a message has waited too long. The console lets you
+        search those messages, inspect them and quickly repair their payload. You can replay them one at a time
+        or in bulk, and the console draws a map of how your queues connect.
+      </p>
+      <p>
+        When you build something like this, the next question is whether anyone would pay for it. So how big is
+        the opportunity? It’s easy to start from the big number, and here it belongs to observability, the
+        market for tools that watch your systems. It’s forecast to reach about $14 billion by 2028. Failed
+        messages sit close to it, so it feels like we're standing next to something huge.
+      </p>
+      <p>
+        But nobody has a budget line called "failed messages". The money has to come from somewhere else: an
+        incident that lost orders, an audit where nobody can say who replayed a payment, or engineers losing a
+        day a week.
+      </p>
+      <p>
+        Nobody has built a company on this, and that's a warning. When something this obvious doesn't exist, the
+        market is usually too small or the pain isn't worth paying for. The real competitor is doing nothing, or
+        the script someone wrote years ago that still more or less works.
+      </p>
+      <p>
+        Every customer would ask the same question: why shouldn't we just build it? They could, and it's getting
+        easier. AI helped us build this in a few weeks of evenings. It can do the same for them.
+      </p>
+      <p>
+        Then there's getting in the door. Onboarding at a medium or large organization is a nightmare, and we
+        know it. If they commit to that, this has to be 10x better than what they do today. And they want fewer
+        tools, not one more.
+      </p>
+      <p>
+        It might be a good small business, but VCs won't even touch it. I'm not sure where the ceiling is, but
+        I'm quite sure it's too low for them.
+      </p>
+      <p>
+        There's also a slower threat. A newer kind of platform saves a program's progress at every step, so
+        after a crash the work picks up where it stopped. Retries are built in, so fewer messages get parked at
+        all. If that wins, our problem shrinks on its own.
+      </p>
+      <p>
+        Now the same evidence, read the other way.
+      </p>
+      <p>
+        A ceiling only matters if you need to go past it. With no investors to pay back, a small business is
+        fine, and a feature can be a business.
+      </p>
+      <p>
+        Nobody has built a company on this, but everybody has built the tool. Companies have been writing their
+        own replay tools for years, and none has won. It could mean the script is good enough, but people don't
+        keep rewriting what's good enough.
+      </p>
+      <p>
+        Monitoring tools tell you the number is high, but nobody is taking action or prioritising it. One team's
+        dead letter queue went unread for days while customers' refunds silently failed. And retrying alone
+        doesn't fix my two examples: the same invalid card fails again, and the warehouse still has no stock.
+        Someone has to decide what happens next, and whether a failed payment comes before a stock update.
+      </p>
+      <p>
+        That also changes the "one more tool" objection. Next to a script nobody maintains, this replaces
+        something. And the first step can be small: a read-only trial, with no write access on day one.
+      </p>
+      <p>
+        The market is changing, and not only against us. Machines are getting good at finding the problem, but
+        people don't fully trust them to fix it. That's the same gap between the alert and the action, and
+        somebody still has to own it.
+      </p>
+      <p>
+        As for those newer platforms, they only help code written from now on. A company with 150 queues won't
+        rewrite a working system to avoid a failure it has learned to live with. And they still can't fix an
+        invalid card.
+      </p>
+      <p>
+        So far, the only company our tool has worked with is one we invented. A fictional retailer of boats,
+        parts and maintenance, with a back end that really fails. Its dead letter queues fill up because its
+        services fail, not because we typed in fake rows. We can take down a manufacturer's registration portal
+        and watch engine registrations, warranty claims and ERP updates pile up together.
+      </p>
+      <p>
+        It was useful, but Speedboat is the best case, because we designed it. Its messages carry our own error
+        labels. Real messages won't. They'll be shaped by whatever framework a company uses, and they'll fail in
+        ways nobody planned.
+      </p>
+      <p>
+        All of this is still reasoning. We stopped before the first conversation with a real customer, so we
+        don't know yet. The idea doesn't fail on the problem. It fails, for now, on proof. That's what the (yet)
+        in the title is for.
       </p>
     </article>
 
